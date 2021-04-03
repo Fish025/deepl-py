@@ -13,20 +13,22 @@ class DeeplTranslator:
         with open(path + '/configuration.json') as f:
             self.config = json.load(f)
 
-    def get_translation_json(self, lst, target_lang=None):
+    def get_translation_json(self, lst, source_lang=None, target_lang=None):
 
         if target_lang is None:
             target_lang = self.config["default_target_lang"]
 
-        if target_lang is None and self.config["default_target_lang"] is not None:
-            target_lang = self.config["default_target_lang"]
+        if source_lang is None and self.config["default_source_lang"] is not None:
+            source_lang = self.config["default_source_lang"]
 
         # Building request
         url = self.config["url"]
         data = [
             ("auth_key", self.config["auth_key"]),
             ("User-Agent", "deepl-py"),
-            ("target_lang", target_lang)
+            ("target_lang", target_lang),
+            ("source_lang", source_lang),
+            ("formality", self.config["formality"])
         ]
 
         # Adding one or multiple sentences to be translated:
@@ -59,14 +61,16 @@ class DeeplTranslator:
     def get_translation(self, txt=None, lst=None, source_lang=None, target_lang=None):
         if lst is None:
             lst = [txt]
-            json_response = self.get_translation_json(lst, target_lang=target_lang)
+            json_response = self.get_translation_json(lst, source_lang=source_lang, target_lang=target_lang)
             return self.process_deepl_response(json_response)[0]
         else:
-            json_response = self.get_translation_json(lst, target_lang=target_lang)
+            json_response = self.get_translation_json(lst, source_lang=source_lang, target_lang=target_lang)
             return self.process_deepl_response(json_response)
 
     # Processes a json object sent back by DeepL
     def process_deepl_response(self, deepl_response):
+        if isinstance(deepl_response, requests.HTTPError):
+            exit()
         translations = []
         for translation in deepl_response['translations']:
             translations.append(translation['text'])
