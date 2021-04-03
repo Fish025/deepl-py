@@ -1,4 +1,8 @@
-# Exemple of a simple use of the translator
+# Example of a simple use of the translator
+import deepltranslator
 
 
-new DeepLTranslator;
+translator = deepltranslator.DeeplTranslator()
+translation = translator.get_translation("Hello")
+print(translation[0])
+print(translator.get_usage())
