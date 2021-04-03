@@ -1,0 +1,7 @@
+{
+  "url": "https://api.deepl.com/v2/translate",
+  "usage_url": " https://api.deepl.com/v2/usage",
+  "auth_key": "ENTER YOUR API KEY HERE",
+  "default_source_lang": "en",
+  "default_target_lang": "es"
+}
