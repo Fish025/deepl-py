@@ -18,7 +18,7 @@ class DeeplTranslator:
         if target_lang is None:
             target_lang = self.config["default_target_lang"]
 
-        if target_lang is None and self.config["default_target_lang"] is not None :
+        if target_lang is None and self.config["default_target_lang"] is not None:
             target_lang = self.config["default_target_lang"]
 
         # Building request
