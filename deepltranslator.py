@@ -13,7 +13,7 @@ class DeeplTranslator:
         with open(path + '/configuration.json') as f:
             self.config = json.load(f)
 
-    def get_translation_json(self, txt, target_lang=None):
+    def get_translation_json(self, lst, target_lang=None):
 
         if target_lang is None:
             target_lang = self.config["default_target_lang"]
@@ -23,12 +23,15 @@ class DeeplTranslator:
 
         # Building request
         url = self.config["url"]
-        data = {
-            "auth_key": self.config["auth_key"],
-            "User-Agent": "deepl-py",
-            "text": txt,
-            "target_lang": target_lang
-        }
+        data = [
+            ("auth_key", self.config["auth_key"]),
+            ("User-Agent", "deepl-py"),
+            ("target_lang", target_lang)
+        ]
+
+        # Adding one or multiple sentences to be translated:
+        for sentence in lst:
+            data.append(("text", sentence))
 
         try:
             response = requests.post(url=url, data=data)
@@ -52,9 +55,15 @@ class DeeplTranslator:
 
         return response.text
 
-    def get_translation(self, text, source_lang=None, target_lang=None):
-        json_response = self.get_translation_json(text, target_lang=target_lang)
-        return self.process_deepl_response(json_response)
+    # Returns a translation for a single sentence or a list
+    def get_translation(self, txt=None, lst=None, source_lang=None, target_lang=None):
+        if lst is None:
+            lst = [txt]
+            json_response = self.get_translation_json(lst, target_lang=target_lang)
+            return self.process_deepl_response(json_response)[0]
+        else:
+            json_response = self.get_translation_json(lst, target_lang=target_lang)
+            return self.process_deepl_response(json_response)
 
     # Processes a json object sent back by DeepL
     def process_deepl_response(self, deepl_response):
