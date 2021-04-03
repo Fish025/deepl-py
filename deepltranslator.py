@@ -13,13 +13,23 @@ class DeeplTranslator:
         with open(path + '/configuration.json') as f:
             self.config = json.load(f)
 
-    def get_translation_json(self, lst, source_lang=None, target_lang=None):
+    def get_translation_json(self, lst, source_lang=None, target_lang=None, formality=None, preserve_formatting=None,
+                             split_sentences=None):
 
         if target_lang is None:
             target_lang = self.config["default_target_lang"]
 
         if source_lang is None and self.config["default_source_lang"] is not None:
             source_lang = self.config["default_source_lang"]
+
+        if preserve_formatting is None:
+            preserve_formatting = self.config["preserve_formatting"]
+
+        if formality is None:
+            formality = self.config["formality"]
+
+        if split_sentences is None:
+            split_sentences = self.config["split_sentences"]
 
         # Building request
         url = self.config["url"]
@@ -28,7 +38,9 @@ class DeeplTranslator:
             ("User-Agent", "deepl-py"),
             ("target_lang", target_lang),
             ("source_lang", source_lang),
-            ("formality", self.config["formality"])
+            ("formality", formality),
+            ("preserve_formatting", preserve_formatting),
+            ("split_sentences", split_sentences)
         ]
 
         # Adding one or multiple sentences to be translated:
@@ -58,13 +70,19 @@ class DeeplTranslator:
         return response.text
 
     # Returns a translation for a single sentence or a list
-    def get_translation(self, txt=None, lst=None, source_lang=None, target_lang=None):
+    def get_translation(self, txt=None, lst=None, source_lang=None, target_lang=None, formality=None,
+                        preserve_formatting=None,
+                        split_sentences=None):
         if lst is None:
             lst = [txt]
-            json_response = self.get_translation_json(lst, source_lang=source_lang, target_lang=target_lang)
+            json_response = self.get_translation_json(lst, source_lang=source_lang, target_lang=target_lang,
+                                                      formality=formality, preserve_formatting=preserve_formatting,
+                                                      split_sentences=split_sentences)
             return self.process_deepl_response(json_response)[0]
         else:
-            json_response = self.get_translation_json(lst, source_lang=source_lang, target_lang=target_lang)
+            json_response = self.get_translation_json(lst, source_lang=source_lang, target_lang=target_lang,
+                                                      formality=formality, preserve_formatting=preserve_formatting,
+                                                      split_sentences=split_sentences)
             return self.process_deepl_response(json_response)
 
     # Processes a json object sent back by DeepL
@@ -75,6 +93,3 @@ class DeeplTranslator:
         for translation in deepl_response['translations']:
             translations.append(translation['text'])
         return translations
-
-
-

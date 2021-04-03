@@ -4,5 +4,9 @@
   "auth_key": "ENTER YOUR API KEY HERE",
   "default_source_lang": "en",
   "default_target_lang": "es",
-  "formality": "less"
+  "formality": "less",
+  "preserve_formatting": 1,
+  "split_sentences": 1
+
+
 }
