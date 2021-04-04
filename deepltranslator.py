@@ -11,8 +11,13 @@ class DeeplTranslator:
     def __init__(self):
         # Loading configuration
         path = os.path.dirname(os.path.abspath(__file__))
-        with open(path + '/configuration.json') as f:
-            self.config = json.load(f)
+
+        try:
+            with open(path + '/configuration.json') as f:
+                self.config = json.load(f)
+        except EnvironmentError:
+            logging.error("Unable to open configuration file, do you have a configuration.json file?")
+            exit(1)
 
     def get_translation_json(self, lst, source_lang=None, target_lang=None, formality=None, preserve_formatting=None,
                              split_sentences=None):
@@ -49,18 +54,17 @@ class DeeplTranslator:
         for sentence in lst:
             data.append(("text", sentence))
 
-            response = ''
-            while attempt <= self.config["max-attempts"] and isinstance(response, requests.HTTPError) is not True:
-                try:
-                    response = requests.post(url=url, data=data)
-                    if response.raise_for_status() is not None:
-                        return response.json()
-                except requests.HTTPError as exception:
-                    logging.error("An error occurred during translation:" + str(exception))
-                    if attempt <= self.config["max-attempts"]:
-                        logging.error(f"Sending request again (attempt {attempt})")
-                        attempt += 1
-
+        response = ''
+        while attempt <= self.config["max-attempts"] and isinstance(response, requests.HTTPError) is not True:
+            try:
+                 response = requests.post(url=url, data=data)
+                 if response.raise_for_status() is None:
+                    return response.json()
+            except requests.HTTPError as exception:
+                logging.error("An error occurred during translation:" + str(exception))
+                if attempt <= self.config["max-attempts"]:
+                    logging.error(f"Sending request again (attempt {attempt})")
+                    attempt += 1
         return None
 
     def get_usage(self):
