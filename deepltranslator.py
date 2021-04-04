@@ -1,8 +1,9 @@
 # See example in main.py
 
-import requests
 import json
+import logging
 import os
+import requests
 
 
 class DeeplTranslator:
@@ -32,6 +33,7 @@ class DeeplTranslator:
             split_sentences = self.config["split_sentences"]
 
         # Building request
+        attempt = 1
         url = self.config["url"]
         data = [
             ("auth_key", self.config["auth_key"]),
@@ -47,13 +49,19 @@ class DeeplTranslator:
         for sentence in lst:
             data.append(("text", sentence))
 
-        try:
-            response = requests.post(url=url, data=data)
-            response.raise_for_status()
-        except requests.HTTPError as exception:
-            return "An error occurred:" + str(exception)
+            response = ''
+            while attempt <= self.config["max-attempts"] and isinstance(response, requests.HTTPError) is not True:
+                try:
+                    response = requests.post(url=url, data=data)
+                    if response.raise_for_status() is not None:
+                        return response.json()
+                except requests.HTTPError as exception:
+                    logging.error("An error occurred during translation:" + str(exception))
+                    if attempt <= self.config["max-attempts"]:
+                        logging.error(f"Sending request again (attempt {attempt})")
+                        attempt += 1
 
-        return response.json()
+        return None
 
     def get_usage(self):
         url = self.config["usage_url"]
@@ -65,7 +73,8 @@ class DeeplTranslator:
             response = requests.post(url=url, data=data)
             response.raise_for_status()
         except requests.HTTPError as exception:
-            return "An error occurred:" + str(exception)
+            logging.error("An error occurred during usage check:" + str(exception))
+            return None
 
         return response.text
 
@@ -87,9 +96,10 @@ class DeeplTranslator:
 
     # Processes a json object sent back by DeepL
     def process_deepl_response(self, deepl_response):
-        if isinstance(deepl_response, requests.HTTPError):
+        if isinstance(deepl_response, requests.HTTPError) or deepl_response is None:
             exit()
-        translations = []
-        for translation in deepl_response['translations']:
-            translations.append(translation['text'])
-        return translations
+        else:
+            translations = []
+            for translation in deepl_response['translations']:
+                translations.append(translation['text'])
+            return translations
